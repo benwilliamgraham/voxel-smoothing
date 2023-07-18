@@ -96,6 +96,31 @@ class BufferInfo {
   }
 }
 
+// Camera
+class Camera {
+  constructor() {
+    this.position = vec3.create();
+    this.rotation = vec3.create();
+
+    const fieldOfView = (45 * Math.PI) / 180;
+    const aspect = canvas.width / canvas.height;
+    const zNear = 0.1;
+    const zFar = 100.0;
+    this.projectionMatrix = mat4.create();
+    mat4.perspective(this.projectionMatrix, fieldOfView, aspect, zNear, zFar);
+  }
+
+  getCameraMatrix() {
+    const cameraMatrix = mat4.create();
+    mat4.translate(cameraMatrix, cameraMatrix, this.position);
+    mat4.rotate(cameraMatrix, cameraMatrix, this.rotation[0], [1, 0, 0]);
+    mat4.rotate(cameraMatrix, cameraMatrix, this.rotation[1], [0, 1, 0]);
+    mat4.rotate(cameraMatrix, cameraMatrix, this.rotation[2], [0, 0, 1]);
+    mat4.multiply(cameraMatrix, this.projectionMatrix, cameraMatrix);
+    return cameraMatrix;
+  }
+}
+
 // Main function
 async function main() {
   // Setup WebGL
@@ -153,6 +178,11 @@ async function main() {
     ])
   );
 
+  // Create camera
+  const camera = new Camera();
+  camera.position = [0.0, 0.0, -6.0];
+
+  // Render
   function render() {
     gl.clearColor(0, 0, 0, 1);
     gl.clearDepth(1);
@@ -160,24 +190,11 @@ async function main() {
     gl.depthFunc(gl.LEQUAL);
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
-    const fieldOfView = (45 * Math.PI) / 180;
-    const aspect = gl.canvas.clientWidth / gl.canvas.clientHeight;
-    const zNear = 0.1;
-    const zFar = 100.0;
-    const projectionMatrix = mat4.create();
-    mat4.perspective(projectionMatrix, fieldOfView, aspect, zNear, zFar);
-
-    const cameraMatrix = mat4.create();
-    mat4.translate(cameraMatrix, cameraMatrix, [0.0, 0.0, -6.0]);
-    mat4.rotate(cameraMatrix, cameraMatrix, 0.0, [0, 0, 1]);
-    mat4.rotate(cameraMatrix, cameraMatrix, 0.0, [0, 1, 0]);
-    mat4.multiply(cameraMatrix, projectionMatrix, cameraMatrix);
-
     gl.useProgram(shaderInfo.program);
     gl.uniformMatrix4fv(
       shaderInfo.uniformLocations.uCameraMatrix,
       false,
-      cameraMatrix
+      camera.getCameraMatrix()
     );
 
     bufferInfo.bind(gl, shaderInfo);
@@ -186,6 +203,38 @@ async function main() {
   }
 
   requestAnimationFrame(render);
+
+  // Handle mouse events
+  let lastX = 0;
+  let lastY = 0;
+  let dragging = false;
+
+  canvas.addEventListener("mousedown", (e) => {
+    lastX = e.offsetX;
+    lastY = e.offsetY;
+    dragging = true;
+  });
+
+  canvas.addEventListener("mouseup", () => {
+    dragging = false;
+  });
+
+  canvas.addEventListener("mousemove", (e) => {
+    if (!dragging) {
+      return;
+    }
+
+    const xDelta = e.offsetX - lastX;
+    const yDelta = e.offsetY - lastY;
+
+    camera.rotation[0] += yDelta * 0.01;
+    camera.rotation[1] += xDelta * 0.01;
+
+    lastX = e.offsetX;
+    lastY = e.offsetY;
+
+    requestAnimationFrame(render);
+  });
 }
 
 main();
