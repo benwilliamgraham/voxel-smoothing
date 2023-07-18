@@ -9,6 +9,8 @@ class BufferInfo {
     this.colorBuffer = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, this.colorBuffer);
     gl.bufferData(gl.ARRAY_BUFFER, colorData, gl.STATIC_DRAW);
+
+    this.numVertices = positionData.length / 3;
   }
 
   bind(gl, shaderInfo) {
@@ -28,7 +30,7 @@ class BufferInfo {
     gl.vertexAttribPointer(
       shaderInfo.attribLocations.aColor,
       4,
-      gl.FLOAT,
+      gl.UNSIGNED_BYTE,
       false,
       0,
       0

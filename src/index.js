@@ -3,6 +3,7 @@
 import { BufferInfo } from "./buffer.js";
 import { Camera } from "./camera.js";
 import { ShaderInfo } from "./shader.js";
+import { Volume } from "./volume.js";
 
 // Setup canvas
 const canvas = document.createElement("canvas");
@@ -37,35 +38,21 @@ async function main() {
     ["uCameraMatrix"]
   );
 
+  // Load default volume
+  const volume = new Volume([2, 2, 2]);
+  volume.set(0, 0, 0, 0xff0000ff);
+  volume.set(0, 0, 1, 0xff00ff00);
+  volume.set(0, 1, 0, 0);
+  volume.set(0, 1, 1, 0);
+  volume.set(1, 0, 0, 0);
+  volume.set(1, 0, 1, 0);
+  volume.set(1, 1, 0, 0xffff0000);
+  volume.set(1, 1, 1, 0);
+
+  const { positionData, colorData } = volume.generateMesh();
+
   // Create buffers
-  const bufferInfo = new BufferInfo(
-    gl,
-    new Float32Array([
-      1.0,
-      1.0,
-      0.0, // 0
-      -1.0,
-      1.0,
-      0.0, // 1
-      1.0,
-      -1.0,
-      0.0, // 2
-    ]),
-    new Float32Array([
-      1.0,
-      1.0,
-      1.0,
-      1.0, // white
-      1.0,
-      0.0,
-      0.0,
-      1.0, // red
-      0.0,
-      1.0,
-      0.0,
-      1.0, // green
-    ])
-  );
+  const bufferInfo = new BufferInfo(gl, positionData, colorData);
 
   // Create camera
   const camera = new Camera(gl.canvas.clientWidth / gl.canvas.clientHeight);
@@ -88,7 +75,7 @@ async function main() {
 
     bufferInfo.bind(gl, shaderInfo);
 
-    gl.drawArrays(gl.TRIANGLES, 0, 3);
+    gl.drawArrays(gl.TRIANGLES, 0, bufferInfo.numVertices);
   }
 
   requestAnimationFrame(render);
