@@ -31,26 +31,69 @@ class Volume {
           }
 
           const normalAndPositions = [
-            [
-              // x-
-              [-1, 0, 0],
-              [
+            // x-
+            {
+              normal: [-1, 0, 0],
+              positions: [
                 [x, y, z],
                 [x, y + 1, z],
                 [x, y + 1, z + 1],
                 [x, y, z + 1],
               ],
+            },
+            {
               // x+
-              [1, 0, 0],
-              [
+              normal: [1, 0, 0],
+              positions: [
                 [x + 1, y, z],
                 [x + 1, y + 1, z],
                 [x + 1, y + 1, z + 1],
                 [x + 1, y, z + 1],
               ],
-            ],
+            },
+            {
+              // y-
+              normal: [0, -1, 0],
+              positions: [
+                [x, y, z],
+                [x + 1, y, z],
+                [x + 1, y, z + 1],
+                [x, y, z + 1],
+              ],
+            },
+            {
+              // y+
+              normal: [0, 1, 0],
+              positions: [
+                [x, y + 1, z],
+                [x + 1, y + 1, z],
+                [x + 1, y + 1, z + 1],
+                [x, y + 1, z + 1],
+              ],
+            },
+            {
+              // z-
+              normal: [0, 0, -1],
+              positions: [
+                [x, y, z],
+                [x + 1, y, z],
+                [x + 1, y + 1, z],
+                [x, y + 1, z],
+              ],
+            },
+            {
+              // z+
+              normal: [0, 0, 1],
+              positions: [
+                [x, y, z + 1],
+                [x + 1, y, z + 1],
+                [x + 1, y + 1, z + 1],
+                [x, y + 1, z + 1],
+              ],
+            },
           ];
-          for (const [normal, positions] of normalAndPositions) {
+          for (const normalAndPosition of normalAndPositions) {
+            const { normal, positions } = normalAndPosition;
             const dx = x + normal[0];
             const dy = y + normal[1];
             const dz = z + normal[2];
