@@ -18,6 +18,15 @@ class Volume {
     ] = rgba;
   }
 
+  scaleAndOffsetPositions(positionData) {
+    const scale = 1 / Math.max(...this.dimensions);
+    for (let i = 0; i < positionData.length; i++) {
+      positionData[i] *= scale;
+      positionData[i] -= 0.5;
+    }
+    return positionData;
+  }
+
   generateMesh() {
     // TODO: Get faster algorithm
     const positionData = [];
@@ -124,7 +133,9 @@ class Volume {
     }
 
     return {
-      positionData: new Float32Array(positionData),
+      positionData: new Float32Array(
+        this.scaleAndOffsetPositions(positionData)
+      ),
       colorData: new Uint32Array(colorData),
     };
   }
