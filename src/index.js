@@ -60,12 +60,39 @@ class ShaderInfo {
 }
 
 // Buffers
-class Buffer {
-  static createBuffer(gl, data) {
-    const buffer = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
-    gl.bufferData(gl.ARRAY_BUFFER, data, gl.STATIC_DRAW);
-    return buffer;
+class BufferInfo {
+  constructor(gl, positionData, colorData) {
+    this.positionBuffer = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, this.positionBuffer);
+    gl.bufferData(gl.ARRAY_BUFFER, positionData, gl.STATIC_DRAW);
+
+    this.colorBuffer = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, this.colorBuffer);
+    gl.bufferData(gl.ARRAY_BUFFER, colorData, gl.STATIC_DRAW);
+  }
+
+  bind(gl, shaderInfo) {
+    gl.bindBuffer(gl.ARRAY_BUFFER, this.positionBuffer);
+    gl.enableVertexAttribArray(shaderInfo.attribLocations.aPosition);
+    gl.vertexAttribPointer(
+      shaderInfo.attribLocations.aPosition,
+      3,
+      gl.FLOAT,
+      false,
+      0,
+      0
+    );
+
+    gl.bindBuffer(gl.ARRAY_BUFFER, this.colorBuffer);
+    gl.enableVertexAttribArray(shaderInfo.attribLocations.aColor);
+    gl.vertexAttribPointer(
+      shaderInfo.attribLocations.aColor,
+      4,
+      gl.FLOAT,
+      false,
+      0,
+      0
+    );
   }
 }
 
@@ -92,14 +119,38 @@ async function main() {
   const shaderInfo = new ShaderInfo(
     gl,
     program,
-    ["aPosition"],
+    ["aPosition", "aColor"],
     ["uCameraMatrix"]
   );
 
   // Create buffers
-  const buffer = Buffer.createBuffer(
+  const bufferInfo = new BufferInfo(
     gl,
-    new Float32Array([1.0, 1.0, -1.0, 1.0, 1.0, -1.0, -1.0, -1.0])
+    new Float32Array([
+      1.0,
+      1.0,
+      0.0, // 0
+      -1.0,
+      1.0,
+      0.0, // 1
+      1.0,
+      -1.0,
+      0.0, // 2
+    ]),
+    new Float32Array([
+      1.0,
+      1.0,
+      1.0,
+      1.0, // white
+      1.0,
+      0.0,
+      0.0,
+      1.0, // red
+      0.0,
+      1.0,
+      0.0,
+      1.0, // green
+    ])
   );
 
   function render() {
@@ -129,18 +180,9 @@ async function main() {
       cameraMatrix
     );
 
-    gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
-    gl.enableVertexAttribArray(shaderInfo.attribLocations.aPosition);
-    gl.vertexAttribPointer(
-      shaderInfo.attribLocations.aPosition,
-      2,
-      gl.FLOAT,
-      false,
-      0,
-      0
-    );
+    bufferInfo.bind(gl, shaderInfo);
 
-    gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+    gl.drawArrays(gl.TRIANGLES, 0, 3);
   }
 
   requestAnimationFrame(render);
