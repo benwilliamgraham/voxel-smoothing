@@ -59,6 +59,16 @@ class ShaderInfo {
   }
 }
 
+// Buffers
+class Buffer {
+  static createBuffer(gl, data) {
+    const buffer = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
+    gl.bufferData(gl.ARRAY_BUFFER, data, gl.STATIC_DRAW);
+    return buffer;
+  }
+}
+
 // Main function
 async function main() {
   // Setup WebGL
@@ -86,9 +96,51 @@ async function main() {
     ["uCameraMatrix"]
   );
 
+  // Create buffers
+  const buffer = Buffer.createBuffer(
+    gl,
+    new Float32Array([1.0, 1.0, -1.0, 1.0, 1.0, -1.0, -1.0, -1.0])
+  );
+
   function render() {
     gl.clearColor(0, 0, 0, 1);
-    gl.clear(gl.COLOR_BUFFER_BIT);
+    gl.clearDepth(1);
+    gl.enable(gl.DEPTH_TEST);
+    gl.depthFunc(gl.LEQUAL);
+    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+
+    const fieldOfView = (45 * Math.PI) / 180;
+    const aspect = gl.canvas.clientWidth / gl.canvas.clientHeight;
+    const zNear = 0.1;
+    const zFar = 100.0;
+    const projectionMatrix = mat4.create();
+    mat4.perspective(projectionMatrix, fieldOfView, aspect, zNear, zFar);
+
+    const cameraMatrix = mat4.create();
+    mat4.translate(cameraMatrix, cameraMatrix, [0.0, 0.0, -6.0]);
+    mat4.rotate(cameraMatrix, cameraMatrix, 0.0, [0, 0, 1]);
+    mat4.rotate(cameraMatrix, cameraMatrix, 0.0, [0, 1, 0]);
+    mat4.multiply(cameraMatrix, projectionMatrix, cameraMatrix);
+
+    gl.useProgram(shaderInfo.program);
+    gl.uniformMatrix4fv(
+      shaderInfo.uniformLocations.uCameraMatrix,
+      false,
+      cameraMatrix
+    );
+
+    gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
+    gl.enableVertexAttribArray(shaderInfo.attribLocations.aPosition);
+    gl.vertexAttribPointer(
+      shaderInfo.attribLocations.aPosition,
+      2,
+      gl.FLOAT,
+      false,
+      0,
+      0
+    );
+
+    gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
   }
 
   requestAnimationFrame(render);
