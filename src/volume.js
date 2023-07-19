@@ -4,6 +4,86 @@ class Volume {
   constructor(dimensions) {
     this.dimensions = dimensions;
     this.data = new Uint32Array(dimensions[0] * dimensions[1] * dimensions[2]);
+    this.data.fill(0);
+  }
+
+  static async load(filename) {
+    const byteArray = new Uint8Array(
+      await (await fetch(filename)).arrayBuffer()
+    );
+
+    function parseUint32(byteArray) {
+      return new DataView(byteArray.buffer).getUint32(0, true);
+    }
+
+    function parseChunk(byteArray) {
+      const id = new TextDecoder().decode(byteArray.slice(0, 4));
+      const contentNumBytes = parseUint32(byteArray.slice(4, 8));
+      const childrenNumBytes = parseUint32(byteArray.slice(8, 12));
+      const content = byteArray.slice(12, contentNumBytes + 12);
+      const children = {};
+      let childBytesOffset = 0;
+      while (childBytesOffset < childrenNumBytes) {
+        const child = parseChunk(
+          byteArray.slice(12 + contentNumBytes + childBytesOffset)
+        );
+        childBytesOffset += child.content.length + 12;
+        children[child.id] = child;
+      }
+      return { id, content, children };
+    }
+
+    // Verify that the file is a valid vox file
+    const magic = new TextDecoder().decode(byteArray.slice(0, 4));
+    if (magic !== "VOX ") {
+      throw new Error(`Invalid VOX file ${name}, expected VOX, found ${magic}`);
+    }
+
+    const mainChunk = parseChunk(byteArray.slice(8));
+    if (mainChunk.id !== "MAIN") {
+      throw new Error(`Invalid VOX file, expected MAIN, found ${mainChunk.id}`);
+    }
+
+    // Determine size
+    const sizeChunk = mainChunk.children["SIZE"];
+    if (!sizeChunk) {
+      fatalError("Invalid VOX file, expected SIZE chunk");
+    }
+    const dimensions = [
+      parseUint32(sizeChunk.content.slice(0, 4)),
+      parseUint32(sizeChunk.content.slice(8, 12)),
+      parseUint32(sizeChunk.content.slice(4, 8)),
+    ];
+
+    // Determine color palette
+    const colorsChunk = mainChunk.children["RGBA"];
+    if (!colorsChunk) {
+      throw new Error(`Invalid VOX file, expected RGBA chunk`);
+    }
+    const palette = new Uint32Array(
+      colorsChunk.content.buffer,
+      colorsChunk.content.byteOffset,
+      colorsChunk.content.byteLength / 4
+    );
+
+    // Create volume
+    const volume = new Volume(dimensions);
+
+    // Determine voxel data
+    const xyziChunk = mainChunk.children["XYZI"];
+    if (!xyziChunk) {
+      throw new Error(`Invalid VOX file, expected XYZI chunk`);
+    }
+    const xyzi = xyziChunk.content;
+    for (let i = 0; i < xyzi.length; i += 4) {
+      const x = xyzi[i];
+      const y = xyzi[i + 1];
+      const z = xyzi[i + 2];
+      const colorIndex = xyzi[i + 3];
+      volume.set(x, z, y, palette[colorIndex - 1]);
+    }
+
+    return volume;
   }
 
   get(x, y, z) {

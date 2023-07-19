@@ -39,15 +39,7 @@ async function main() {
   );
 
   // Load default volume
-  const volume = new Volume([2, 2, 2]);
-  volume.set(0, 0, 0, 0xff0000ff);
-  volume.set(0, 0, 1, 0xff00ff00);
-  volume.set(0, 1, 0, 0);
-  volume.set(0, 1, 1, 0);
-  volume.set(1, 0, 0, 0);
-  volume.set(1, 0, 1, 0);
-  volume.set(1, 1, 0, 0xffff0000);
-  volume.set(1, 1, 1, 0);
+  const volume = await Volume.load("assets/teapot.vox");
 
   const { positionData, colorData } = volume.generateMesh();
 
@@ -56,7 +48,7 @@ async function main() {
 
   // Create camera
   const camera = new Camera(gl.canvas.clientWidth / gl.canvas.clientHeight);
-  camera.position = [0.0, 0.0, -6.0];
+  camera.position = [0.0, 0.0, -3.0];
 
   // Render
   function render() {
