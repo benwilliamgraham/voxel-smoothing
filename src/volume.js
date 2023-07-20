@@ -115,6 +115,7 @@ class Volume {
     // TODO: Get faster algorithm
     const positionData = [];
     const colorData = [];
+    const normalData = [];
     for (let x = 0; x < this.dimensions[0]; x++) {
       for (let y = 0; y < this.dimensions[1]; y++) {
         for (let z = 0; z < this.dimensions[2]; z++) {
@@ -209,6 +210,7 @@ class Volume {
 
               for (let i = 0; i < 6; i++) {
                 colorData.push(rgba);
+                normalData.push.apply(normalData, normal);
               }
             }
           }
@@ -221,6 +223,7 @@ class Volume {
         this.scaleAndOffsetPositions(positionData)
       ),
       colorData: new Uint32Array(colorData),
+      normalData: new Float32Array(normalData),
     };
   }
 }

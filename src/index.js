@@ -52,7 +52,7 @@ async function main() {
   const shaderInfo = new ShaderInfo(
     gl,
     program,
-    ["aPosition", "aColor"],
+    ["aPosition", "aColor", "aNormal"],
     ["uCameraMatrix"]
   );
 
@@ -125,8 +125,8 @@ async function main() {
   // Add model selection
   async function loadModel(modelName) {
     const volume = await Volume.load(`assets/${modelName}.vox`);
-    const { positionData, colorData } = volume.generateMesh();
-    bufferInfo = new BufferInfo(gl, positionData, colorData);
+    const { positionData, colorData, normalData } = volume.generateMesh();
+    bufferInfo = new BufferInfo(gl, positionData, colorData, normalData);
     requestAnimationFrame(render);
   }
 
