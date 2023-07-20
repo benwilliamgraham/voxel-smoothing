@@ -11,6 +11,24 @@ canvas.width = 960;
 canvas.height = 600;
 document.body.appendChild(canvas);
 
+// Model list
+const modelNames = [
+  "castle",
+  "chr_knight",
+  "chr_sword",
+  "doom",
+  "menger",
+  "monu1",
+  "monu9",
+  "monu10",
+  "nature",
+  "room",
+  "shelf",
+  "teapot",
+  "3x3x3",
+  "8x8x8",
+];
+
 // Main function
 async function main() {
   // Setup WebGL
@@ -38,13 +56,8 @@ async function main() {
     ["uCameraMatrix"]
   );
 
-  // Load default volume
-  const volume = await Volume.load("assets/doom.vox");
-
-  const { positionData, colorData } = volume.generateMesh();
-
   // Create buffers
-  const bufferInfo = new BufferInfo(gl, positionData, colorData);
+  let bufferInfo;
 
   // Create camera
   const camera = new Camera(gl.canvas.clientWidth / gl.canvas.clientHeight);
@@ -69,8 +82,6 @@ async function main() {
 
     gl.drawArrays(gl.TRIANGLES, 0, bufferInfo.numVertices);
   }
-
-  requestAnimationFrame(render);
 
   // Handle mouse events
   let lastX = 0;
@@ -110,6 +121,39 @@ async function main() {
     camera.position[2] = Math.min(camera.position[2], -0.001);
     requestAnimationFrame(render);
   });
+
+  // Add model selection
+  async function loadModel(modelName) {
+    const volume = await Volume.load(`assets/${modelName}.vox`);
+    const { positionData, colorData } = volume.generateMesh();
+    bufferInfo = new BufferInfo(gl, positionData, colorData);
+    requestAnimationFrame(render);
+  }
+
+  const modelSelect = document.createElement("select");
+  modelSelect.addEventListener("change", async (e) => {
+    const modelName = e.target.value;
+    await loadModel(modelName);
+  });
+
+  for (const modelName of modelNames) {
+    const option = document.createElement("option");
+    option.value = modelName;
+    option.innerText = modelName;
+    modelSelect.appendChild(option);
+
+    if (modelName === modelNames[0]) {
+      option.selected = true;
+    }
+  }
+
+  const modelSelectDiv = document.createElement("div");
+  modelSelectDiv.appendChild(document.createTextNode("Model: "));
+  modelSelectDiv.appendChild(modelSelect);
+  document.body.appendChild(modelSelectDiv);
+
+  // Load first model
+  loadModel(modelNames[0]);
 }
 
 main();
