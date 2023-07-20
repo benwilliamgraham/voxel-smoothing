@@ -75,12 +75,13 @@ class Volume {
       throw new Error(`Invalid VOX file, expected XYZI chunk`);
     }
     const xyzi = xyziChunk.content;
-    for (let i = 0; i < xyzi.length; i += 4) {
+    for (let i = 4; i < xyzi.length; i += 4) {
       const x = xyzi[i];
       const y = xyzi[i + 1];
       const z = xyzi[i + 2];
       const colorIndex = xyzi[i + 3];
       volume.set(x, z, y, palette[colorIndex - 1]);
+      console.log(x, y, z, colorIndex, palette[colorIndex - 1].toString(16));
     }
 
     return volume;
@@ -100,9 +101,13 @@ class Volume {
 
   scaleAndOffsetPositions(positionData) {
     const scale = 1 / Math.max(...this.dimensions);
+    for (let i = 0; i < positionData.length; i += 3) {
+      positionData[i] -= this.dimensions[0] / 2;
+      positionData[i + 1] -= this.dimensions[1] / 2;
+      positionData[i + 2] -= this.dimensions[2] / 2;
+    }
     for (let i = 0; i < positionData.length; i++) {
       positionData[i] *= scale;
-      positionData[i] -= 0.5;
     }
     return positionData;
   }

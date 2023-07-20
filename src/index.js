@@ -39,7 +39,7 @@ async function main() {
   );
 
   // Load default volume
-  const volume = await Volume.load("assets/teapot.vox");
+  const volume = await Volume.load("assets/doom.vox");
 
   const { positionData, colorData } = volume.generateMesh();
 
