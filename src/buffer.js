@@ -31,7 +31,7 @@ class BufferInfo {
       shaderInfo.attribLocations.aColor,
       4,
       gl.UNSIGNED_BYTE,
-      false,
+      true,
       0,
       0
     );

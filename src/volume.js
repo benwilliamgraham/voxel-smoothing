@@ -81,7 +81,6 @@ class Volume {
       const z = xyzi[i + 2];
       const colorIndex = xyzi[i + 3];
       volume.set(x, z, y, palette[colorIndex - 1]);
-      console.log(x, y, z, colorIndex, palette[colorIndex - 1].toString(16));
     }
 
     return volume;
