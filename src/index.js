@@ -123,11 +123,20 @@ async function main() {
   });
 
   // Add model selection
-  async function loadModel(modelName) {
-    const volume = await Volume.load(`assets/${modelName}.vox`);
-    const { positionData, colorData, normalData } = volume.generateMesh();
+  let volume;
+
+  function uploadVolume() {
+    const { positionData, colorData, normalData } = volume.generateMesh(
+      smoothingPasses,
+      smoothingStrength
+    );
     bufferInfo = new BufferInfo(gl, positionData, colorData, normalData);
     requestAnimationFrame(render);
+  }
+
+  async function loadModel(modelName) {
+    volume = await Volume.load(`assets/${modelName}.vox`);
+    uploadVolume();
   }
 
   const modelSelect = document.createElement("select");
@@ -152,7 +161,58 @@ async function main() {
   modelSelectDiv.appendChild(modelSelect);
   document.body.appendChild(modelSelectDiv);
 
-  // Load first model
+  // Add smoothing slider
+  let smoothingPasses = 0;
+
+  const smoothingSlider = document.createElement("input");
+  smoothingSlider.type = "range";
+  smoothingSlider.min = 0;
+  smoothingSlider.max = 10;
+  smoothingSlider.value = smoothingPasses;
+
+  const smoothingSliderValue = document.createElement("span");
+  smoothingSliderValue.innerText = smoothingPasses;
+
+  smoothingSlider.addEventListener("input", (e) => {
+    smoothingPasses = parseInt(e.target.value);
+    smoothingSliderValue.innerText = smoothingPasses;
+    uploadVolume();
+  });
+
+  const smoothingSliderDiv = document.createElement("div");
+  smoothingSliderDiv.appendChild(document.createTextNode("Smoothing passes: "));
+  smoothingSliderDiv.appendChild(smoothingSlider);
+  smoothingSliderDiv.appendChild(smoothingSliderValue);
+  document.body.appendChild(smoothingSliderDiv);
+
+  // Add smoothing strength slider
+  let smoothingStrength = 0.5;
+
+  const smoothingStrengthSlider = document.createElement("input");
+  smoothingStrengthSlider.type = "range";
+  smoothingStrengthSlider.min = 0;
+  smoothingStrengthSlider.max = 1;
+  smoothingStrengthSlider.step = 0.01;
+  smoothingStrengthSlider.value = smoothingStrength;
+
+  const smoothingStrengthSliderValue = document.createElement("span");
+  smoothingStrengthSliderValue.innerText = smoothingStrength;
+
+  smoothingStrengthSlider.addEventListener("input", (e) => {
+    smoothingStrength = parseFloat(e.target.value);
+    smoothingStrengthSliderValue.innerText = smoothingStrength;
+    uploadVolume();
+  });
+
+  const smoothingStrengthSliderDiv = document.createElement("div");
+  smoothingStrengthSliderDiv.appendChild(
+    document.createTextNode("Smoothing strength: ")
+  );
+  smoothingStrengthSliderDiv.appendChild(smoothingStrengthSlider);
+  smoothingStrengthSliderDiv.appendChild(smoothingStrengthSliderValue);
+  document.body.appendChild(smoothingStrengthSliderDiv);
+
+  // Load initial model
   loadModel(modelNames[0]);
 }
 

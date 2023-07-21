@@ -111,7 +111,7 @@ class Volume {
     return positionData;
   }
 
-  generateMesh() {
+  generateMesh(smoothingPasses, smoothingStrength) {
     // TODO: Get faster algorithm
     const positionData = [];
     const colorData = [];
